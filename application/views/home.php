@@ -22,6 +22,8 @@
 
       #header a { margin-top: 20px; }
       #header .container { padding: 0px 15px; }
+      #loading { margin-top: 170px; }
+      #loading h1 { font-size: 50px; }
 
       #main {
         background: white;
@@ -40,6 +42,22 @@
         -webkit-border-radius: 8px;
            -moz-border-radius: 8px;
                 border-radius: 8px;
+      }
+
+      .uppercase {
+        text-decoration: uppercase;
+        color: #333;
+        font-weight: bold;
+      }
+
+      .child {
+        margin-left: 25px;
+        border-left: 1px dotted #CCC;
+      }
+
+      .wrapper {
+        padding: 5px 10px;
+        margin-bottom: 10px;
       }
 
     </style>
@@ -72,21 +90,18 @@
 
   <!-- Main content container -->
   <div class="container shadow rounded" id="main">
-    <?php
-        // Loop through the comments on load and display the comments
-        foreach($comments as $id => $comment)
-        {
-
-        }
-    ?>
+    <div id="loading" align="center">
+      <h1>Loading...</h1>
+    </div>
   </div>
-  <div id="timezone">asdlkj</div>
+  <div id="timezone"><?php echo time(); ?></div>
 
   <!-- JS, at the bottom -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script async src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   <script async src="http://malsup.github.com/jquery.form.js"></script>
   <script>
+
   // Ensure that the page has loaded
   $( document ).ready(function() {
 
@@ -96,17 +111,52 @@
       // Check if the response was successful
       if (data['state'] == 'success')
       {
+        // Clear the loading
+        $("#main").html("");
+
         // Use a holder for the data
         $("#timezone").html(data['timestamp']);
+
+        // Loop through all the data
+        $.each( data['data'], function( key, val ) {
+
+          // Create a blank class
+          var element_class = "";
+
+          // Should it be a child entry, add the child class
+          if (val['parent'] > 0) {
+            element_class = "child";
+          }
+
+          // Create the item
+          var new_element = "<div class='comments " + element_class + "' id='" + val['id'] + "'>\
+                              <div class='wrapper'>\
+                                <span class='glyphicon glyphicon-comment'></span>\
+                                <a class='uppercase' href='mailto:" + val['email'] + "'>" + val['first_name'] + "</a>\
+                                " + val['id'] + "," + val['parent'] + "\
+                                <p>" + val['comment'] + "</p>\
+                                <a data-id='" + val['id'] + "' href=''>Reply to comment <span class='glyphicon glyphicon-share-alt'></span></a>\
+                              </div>\
+                            </div>";
+
+          // Parent comment, append to the main container
+          if (val['parent'] == 0) {
+            $("#main").append( new_element );
+          }
+
+          // Child comment, append to parent
+          else {
+            $("#" + val['parent']).append( new_element );
+          }
+        });
       }
 
-      $.each( data['data'], function( key, val ) {
-        var new_element = "<div id='" + val['id'] + "'>\
-                            <small><a href='mailto:" + val['email'] + "'>" + val['first_name'] + "</a></small> (posted) \
-                            <p>" + val['comment'] + "</p>\
-                          </div>";
-        $("#main").append( new_element );
-      });
+      // We ran into some sort of error
+      else
+      {
+        // Print it out
+        $("#loading").html("<h1>ERROR</h1>" + data['message']);
+      }
     });
 
   });

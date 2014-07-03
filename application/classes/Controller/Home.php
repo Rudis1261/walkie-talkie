@@ -14,5 +14,4 @@ class Controller_Home extends Controller_Template {
         $this->template->topics = array();
 		$this->template->comments = array();
 	}
-
 }
