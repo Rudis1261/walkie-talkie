@@ -20,7 +20,7 @@ class Controller_Ajax extends Controller {
         // Failure
         else
         {
-            $json->failure('Empty');
+            $json->error('Empty');
         }
     }
 
@@ -43,7 +43,7 @@ class Controller_Ajax extends Controller {
         // Failure
         else
         {
-            $json->failure('Empty');
+            $json->error('Empty');
         }
     }
 }

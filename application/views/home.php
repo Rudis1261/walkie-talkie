@@ -24,6 +24,7 @@
       #header .container { padding: 0px 15px; }
       #loading { margin-top: 170px; }
       #loading h1 { font-size: 50px; }
+      #timezone { display: none; }
 
       #main {
         background: white;
@@ -158,6 +159,66 @@
         $("#loading").html("<h1>ERROR</h1>" + data['message']);
       }
     });
+
+
+    // Check for updates every 2 seconds
+    setInterval(function() {
+
+      var getTimestamp = $("#timezone").html();
+
+      // Get the list of comments
+      $.getJSON( "/Ajax/Since/" + getTimestamp, function( data ) {
+
+        console.table(data);
+
+        // Check if the response was successful
+        if (data['state'] == 'success')
+        {
+          // Use a holder for the data
+          $("#timezone").html(data['timestamp']);
+
+          // Loop through all the data
+          $.each( data['data'], function( key, val ) {
+
+            // Create a blank class
+            var element_class = "";
+
+            // Should it be a child entry, add the child class
+            if (val['parent'] > 0) {
+              element_class = "child";
+            }
+
+            // Create the item
+            var new_element = "<div class='comments " + element_class + "' id='" + val['id'] + "'>\
+                                <div class='wrapper'>\
+                                  <span class='glyphicon glyphicon-comment'></span>\
+                                  <a class='uppercase' href='mailto:" + val['email'] + "'>" + val['first_name'] + "</a>\
+                                  " + val['id'] + "," + val['parent'] + "\
+                                  <p>" + val['comment'] + "</p>\
+                                  <a data-id='" + val['id'] + "' href=''>Reply to comment <span class='glyphicon glyphicon-share-alt'></span></a>\
+                                </div>\
+                              </div>";
+
+            // Parent comment, append to the main container
+            if (val['parent'] == 0) {
+              $("#main").append( new_element );
+            }
+
+            // Child comment, append to parent
+            else {
+              $("#" + val['parent']).append( new_element );
+            }
+          });
+        }
+
+        // We ran into some sort of error
+        else
+        {
+          // Print it out
+          $("#loading").html("<h1>ERROR</h1>" + data['message']);
+        }
+      });
+    }, 5000);
 
   });
   </script>
