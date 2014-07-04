@@ -8,6 +8,7 @@
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//bootstrapvalidator.com/vendor/bootstrapvalidator/css/bootstrapValidator.min.css">
     <style>
       body {
         background: #e1e3e6;
@@ -154,18 +155,31 @@
           <?php
 
             // Inject the default form
-            echo Form::open("Ajax/Add", array("id" => "add-form", "class" => "form form-vertical"));
-            echo Form::label("Name", NULL, array("class" => "input-label"));
+            echo Form::open("Ajax/Add", array("id" => "add-form", "class" => "form form-vertical", "method" => "post"));
             echo Form::hidden("parent", 0);
-            echo Form::input("first_name", NULL, array("id" => "first_name", "placeholder" => "John Doe", "class" => "form-control", "minlength" => 2, "required" => true));
-            echo "<br />";
+
+            echo '<div class="form-group">';
+            echo Form::label("Name", NULL, array("class" => "input-label"));
+            echo '</div>';
+
+            echo '<div class="form-group">';
+            echo Form::input("first_name", NULL, array("id" => "first_name", "placeholder" => "John Doe", "class" => "form-control"));
+            echo "</div>";
+
+            echo '<div class="form-group">';
             echo Form::label("Email Address", NULL, array("class" => "input-label"));
-            echo Form::input("email", NULL, array("id" => "email", "class" => "form-control", "type" => "email", "placeholder" => "John.Doe@gmail.com", "minlength" => 2, "required" => true));
-            echo "<br />";
+            echo Form::input("email", NULL, array("id" => "email", "class" => "form-control", "type" => "email", "placeholder" => "John.Doe@gmail.com"));
+            echo "</div>";
+
+            echo '<div class="form-group">';
             echo Form::label("Comment", NULL, array("class" => "input-label"));
-            echo Form::textarea("comment", NULL, array("id" => "comment", "class" => "form-control", "placeholder" => "Jump, Shout. Let it all out", "minlength" => 4, "required" => true));
-            echo "<br />";
-            echo Form::button("add", "Submit", array("class" => "btn btn-primary btn-lg"));
+            echo Form::textarea("comment", NULL, array("id" => "comment", "class" => "form-control", "placeholder" => "Jump, Shout. Let it all out"));
+            echo "</div>";
+
+            echo '<div class="form-group">';
+            echo Form::input("add", "Submit", array("class" => "btn btn-primary btn-lg", "type" => "submit"));
+            echo "</div>";
+
             echo Form::close();
           ?>
           </p>
@@ -176,9 +190,9 @@
 
   <!-- JS, at the bottom -->
   <!-- Loading all the required Javascript for this assignment -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.13.0/jquery.validate.min.js"></script>
-  <script src="http://malsup.github.com/jquery.form.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+  <script src="//bootstrapvalidator.com/vendor/bootstrapvalidator/js/bootstrapValidator.min.js"></script>
   <script async src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   <script>
 
@@ -196,13 +210,66 @@
   // Ensure that the page has loaded
   $( document ).ready(function() {
 
-    // Create an instance of our ajax form
-    $('#add-form').ajaxForm({ dataType:  'json', success: processJson, beforeSubmit:  validator });
-    $('#add-form').children('input').keyup(function(event){ validator(); });
 
-    function validator(){
-      $("#add-form").validate();
-    }
+    $('#add-form').bootstrapValidator({
+        message: 'This value is not valid',
+        submitHandler: function(validator, form) {
+          $.post(form.attr('action'), form.serialize(), function(result) {
+                console.log(result);
+            }, 'json');
+        },
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            first_name: {
+                message: 'The name is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'The name is required and cannot be empty'
+                    },
+                    stringLength: {
+                        min: 2,
+                        max: 30,
+                        message: 'The name must be more than 2 and less than 30 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_]+$/,
+                        message: 'The name can only consist of alphabetical, number and underscore'
+                    }
+                }
+            },
+            comment: {
+                message: 'The comment is not valid',
+                validators: {
+                    notEmpty: {
+                        message: 'The comment is required and cannot be empty'
+                    },
+                    stringLength: {
+                        min: 6,
+                        max: 1000,
+                        message: 'The comment must be more than 6 and less than 30 characters long'
+                    },
+                    regexp: {
+                        regexp: /^[a-zA-Z0-9_ \n\r]+$/,
+                        message: 'The comment can only consist of alphabetical, number and underscore'
+                    }
+                }
+            },
+            email: {
+                validators: {
+                    notEmpty: {
+                        message: 'The email address field is required and cannot be empty'
+                    },
+                    emailAddress: {
+                        message: 'The input is not a valid email address'
+                    }
+                }
+            }
+        }
+    });
 
     // Process the server response from the form submission
     function processJson(data) {
