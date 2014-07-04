@@ -14,7 +14,8 @@ class Model_comment extends Model {
         // We need some content
         if (!empty($result))
         {
-            $output = $result;
+            // Transform the data somewhat
+            $output = $this->transform($result);
         }
 
         // Just return the output
@@ -33,10 +34,78 @@ class Model_comment extends Model {
         // We need some content
         if (!empty($result))
         {
-            $output = $result;
+            // Transform the data somewhat
+            $output = $this->transform($result);
         }
 
         // Just return the output
         return $output;
+    }
+
+    // Transform the array somewhat
+    public function transform($inputArray=false)
+    {
+        // Only attempt to transform the array should we actually have one
+        if(!empty($inputArray))
+        {
+            // Loop through and add some information to the array
+            foreach( (array) $inputArray as $index => $array)
+            {
+                // Add the date and string version
+                $inputArray[$index]['comment'] = nl2br($array['comment']);
+                $inputArray[$index]['age'] = $this->time2str($array['timestamp']);
+                $inputArray[$index]['date'] = date('d F Y, H:i', $array['timestamp']);
+            }
+        }
+        return $inputArray;
+    }
+
+    // Returns an English representation of a date
+    // Graciously stolen from http://ejohn.org/files/pretty.js
+    public function time2str($ts)
+    {
+        if(!ctype_digit($ts))
+            $ts = strtotime($ts);
+
+        $diff = time() - $ts;
+        if($diff == 0)
+            return 'now';
+        elseif($diff > 0)
+        {
+            $day_diff = floor($diff / 86400);
+            if($day_diff == 0)
+            {
+                if($diff < 60) return 'just now';
+                if($diff < 120) return '1 minute ago';
+                if($diff < 3600) return floor($diff / 60) . ' minutes ago';
+                if($diff < 7200) return '1 hour ago';
+                if($diff < 86400) return floor($diff / 3600) . ' hours ago';
+            }
+            if($day_diff == 1) return 'Yesterday';
+            if($day_diff < 7) return $day_diff . ' days ago';
+            if($day_diff < 31) return ceil($day_diff / 7) . ' weeks ago';
+            if($day_diff < 60) return 'last month';
+            $ret = date('F Y', $ts);
+            return ($ret == 'December 1969') ? '' : $ret;
+        }
+        else
+        {
+            $diff = abs($diff);
+            $day_diff = floor($diff / 86400);
+            if($day_diff == 0)
+            {
+                if($diff < 120) return 'in a minute';
+                if($diff < 3600) return 'in ' . floor($diff / 60) . ' minutes';
+                if($diff < 7200) return 'in an hour';
+                if($diff < 86400) return 'in ' . floor($diff / 3600) . ' hours';
+            }
+            if($day_diff == 1) return 'Tomorrow';
+            if($day_diff < 4) return date('l', $ts);
+            if($day_diff < 7 + (7 - date('w'))) return 'next week';
+            if(ceil($day_diff / 7) < 4) return 'in ' . ceil($day_diff / 7) . ' weeks';
+            if(date('n', $ts) == date('n') + 1) return 'next month';
+            $ret = date('F Y', $ts);
+            return ($ret == 'December 1969') ? '' : $ret;
+        }
     }
 }

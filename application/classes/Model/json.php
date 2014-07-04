@@ -4,7 +4,7 @@ class Model_json extends Model {
 
     // This controller will provide a success / failure response along with a message to be displayed should and error be encountered
     public $output = array(
-        "state"         => "failure",
+        "state"         => "error",
         "message"       => "No valid action provided",
         "data"          => array(),
         "timestamp"     => 0
@@ -20,7 +20,7 @@ class Model_json extends Model {
     public function error($message="")
     {
         # Set a failed response
-        $this->output["state"] = "failure";
+        $this->output["state"] = "error";
         $this->output["timestamp"] = time();
 
         // Ensure that we have a message

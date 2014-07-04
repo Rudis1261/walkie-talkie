@@ -46,4 +46,14 @@ class Controller_Ajax extends Controller {
             $json->error('Empty');
         }
     }
+
+    // We also need to be able to add more comments
+    public function action_add()
+    {
+        # Select all the
+        $comment = Model::factory("comment");
+        $json = Model::factory("json");
+        $json->data(json_encode($_REQUEST));
+        $json->success("Hello There!");
+    }
 }
