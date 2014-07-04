@@ -11,7 +11,5 @@ class Controller_Home extends Controller_Template {
         # Prepare the page and send the details to the template
         $this->template->title = "Walkie-talkie";
         $this->template->icon = "comment";
-        $this->template->topics = array();
-		$this->template->comments = array();
 	}
 }

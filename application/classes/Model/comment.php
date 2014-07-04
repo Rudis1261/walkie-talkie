@@ -3,13 +3,41 @@
 class Model_comment extends Model {
 
     // We need to get all the comments at once
-    public function all()
+    public function all($order=false, $direction=false)
     {
         // We will fill this if there is any data
         $output = array();
 
         // Select all the data
-        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->execute()->as_array();
+        if ($order == false AND $direction == false)
+        {
+            $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->execute()->as_array();
+        }
+
+        else
+        {
+            $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->order_by($order, $direction)->execute()->as_array();
+        }
+
+        // We need some content
+        if (!empty($result))
+        {
+            // Transform the data somewhat
+            $output = $this->transform($result);
+        }
+
+        // Just return the output
+        return $output;
+    }
+
+    // I want a particular id
+    public function id($id)
+    {
+        // We will fill this if there is any data
+        $output = array();
+
+        // Select all the data
+        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('id', "=", $id)->execute()->as_array();
 
         // We need some content
         if (!empty($result))
@@ -81,6 +109,12 @@ class Model_comment extends Model {
             }
         }
         return $inputArray;
+    }
+
+    // Trash the comment
+    public function trash($id)
+    {
+        return DB::update('comments')->set(array('active'=>'0'))->where('id','=',$id)->execute();
     }
 
     // Returns an English representation of a date

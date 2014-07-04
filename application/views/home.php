@@ -23,10 +23,12 @@
         background: #333;
         color: white;
         z-index: 1;
-        border-bottom: 4px solid #008dc8;
+        border-bottom: 4px solid #428bca;
       }
 
-      #header a { color: white; margin-top: 20px; text-decoration: none; }
+      #header a { margin-top: 20px; }
+      #header a h1,
+      #header a:hover h1 { color: white; margin-top: 20px; text-decoration: none; }
       #header .container { padding: 0px 12px; }
       #loading { margin-top: 170px; }
       #loading h1 { font-size: 50px; }
@@ -112,10 +114,16 @@
   <div class="row transparent" id="header">
     <div class="container">
       <div class="pull-right">
-        <a href="/Admin" class="btn btn-default">
-          Admin
-          <span class="glyphicon glyphicon-cog"></span>
-        </a>
+        <div class="btn-group">
+          <a href="/" class="btn btn-default active">
+            Home
+            <span class="glyphicon glyphicon-home"></span>
+          </a>
+          <a href="/Admin" class="btn btn-default">
+            Admin
+            <span class="glyphicon glyphicon-cog"></span>
+          </a>
+        </div>
       </div>
       <a href="/">
         <h1>
@@ -140,10 +148,12 @@
     </div>
   </div>
 
+  <!-- Some extras -->
   <div id="end" align="center"><h1>THE END<h1></div>
   <div id="timezone"><?php echo time(); ?></div>
   <div id="counter">0</div>
 
+  <!-- Add the modal which will hold the form -->
   <div id="modal" class="modal fade">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -207,7 +217,7 @@
       // Prevent the button from doing anything
       event.preventDefault();
 
-      // Reset the form
+      // Reset the form, and validation on it
       $('#add-form').trigger('reset');
       $('#add-form').data('bootstrapValidator').resetForm();
 
@@ -228,11 +238,6 @@
 
           // Send the details to the backend to be processed
           $.post(form.attr('action'), form.serialize(), function(data) {
-
-              console.log(data['state']);
-              console.log(data['message']);
-              console.log(data['timestamp']);
-              console.table(data['data']);
 
               // Handle the errors
               if (data['state'] == 'error')
@@ -270,7 +275,7 @@
                         message: 'The name must be more than 2 and less than 30 characters long'
                     },
                     regexp: {
-                        regexp: /^[a-zA-Z0-9_ ]+$/,
+                        regexp: /^[a-zA-Z0-9_ -]+$/,
                         message: 'The name can only consist of alphabetical, number and underscore'
                     }
                 }
