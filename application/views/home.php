@@ -106,74 +106,18 @@
   // Ensure that the page has loaded
   $( document ).ready(function() {
 
-    // Get the list of comments
-    $.getJSON( "/Ajax/Comments", function( data ) {
-
-      // Check if the response was successful
-      if (data['state'] == 'success')
-      {
-        // Clear the loading
-        $("#main").html("");
-
-        // Use a holder for the data
-        $("#timezone").html(data['timestamp']);
-
-        // Loop through all the data
-        $.each( data['data'], function( key, val ) {
-
-          // Create a blank class
-          var element_class = "";
-
-          // Should it be a child entry, add the child class
-          if (val['parent'] > 0) {
-            element_class = "child";
-          }
-
-          // Create the item
-          var new_element = "<div class='comments " + element_class + "' id='" + val['id'] + "'>\
-                              <div class='wrapper'>\
-                                <span class='glyphicon glyphicon-comment'></span>\
-                                <a class='uppercase' href='mailto:" + val['email'] + "'>" + val['first_name'] + "</a>\
-                                " + val['id'] + "," + val['parent'] + "\
-                                <p>" + val['comment'] + "</p>\
-                                <a data-id='" + val['id'] + "' href=''>Reply to comment <span class='glyphicon glyphicon-share-alt'></span></a>\
-                              </div>\
-                            </div>";
-
-          // Parent comment, append to the main container
-          if (val['parent'] == 0) {
-            $("#main").append( new_element );
-          }
-
-          // Child comment, append to parent
-          else {
-            $("#" + val['parent']).append( new_element );
-          }
-        });
-      }
-
-      // We ran into some sort of error
-      else
-      {
-        // Print it out
-        $("#loading").html("<h1>ERROR</h1>" + data['message']);
-      }
-    });
-
-
-    // Check for updates every 2 seconds
-    setInterval(function() {
-
-      var getTimestamp = $("#timezone").html();
-
+    // I would like to make the call to the back-end generic for the updating of the comments
+    function backendCall(URL)
+    {
       // Get the list of comments
-      $.getJSON( "/Ajax/Since/" + getTimestamp, function( data ) {
-
-        console.table(data);
+      $.getJSON( URL, function( data ) {
 
         // Check if the response was successful
         if (data['state'] == 'success')
         {
+          // Clear the loading
+          $("#main").html("");
+
           // Use a holder for the data
           $("#timezone").html(data['timestamp']);
 
@@ -218,6 +162,19 @@
           $("#loading").html("<h1>ERROR</h1>" + data['message']);
         }
       });
+    }
+
+    // When the page loads the first time we will need to get all the comments in the system
+    backendCall("/Ajax/Comments");
+
+    // Check for updates every 2 seconds
+    setInterval(function() {
+
+      // Get the last updated timestamp
+      var getTimestamp = $("#timezone").html();
+
+      // We are looking for any comments since then
+      backendCall("/Ajax/Since/" + getTimestamp);
     }, 5000);
 
   });
