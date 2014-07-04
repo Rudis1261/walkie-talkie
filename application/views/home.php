@@ -26,11 +26,12 @@
         border-bottom: 4px solid #008dc8;
       }
 
-      #header a { margin-top: 20px; }
+      #header a { color: white; margin-top: 20px; text-decoration: none; }
       #header .container { padding: 0px 12px; }
       #loading { margin-top: 170px; }
       #loading h1 { font-size: 50px; }
       #timezone { display: none; }
+      #counter { display: none; }
       #end { color: #ccc; }
 
       #main {
@@ -69,7 +70,7 @@
       }
 
       .child {
-        margin-left: 25px;
+        margin-left: 30px;
         border-left: 1px dotted #CCC;
       }
 
@@ -94,6 +95,7 @@
 
       .btn-danger {
         background: maroon;
+        border-color: #660606;
       }
 
     </style>
@@ -115,10 +117,12 @@
           <span class="glyphicon glyphicon-cog"></span>
         </a>
       </div>
-      <h1>
-        <span class="glyphicon glyphicon-<?php echo $icon; ?>"></span>
-        <?php echo $title; ?>
-      </h1>
+      <a href="/">
+        <h1>
+          <span class="glyphicon glyphicon-<?php echo $icon; ?>"></span>
+          <?php echo $title; ?>
+        </h1>
+      </a>
     </div>
   </div>
 
@@ -138,6 +142,7 @@
 
   <div id="end" align="center"><h1>THE END<h1></div>
   <div id="timezone"><?php echo time(); ?></div>
+  <div id="counter">0</div>
 
   <div id="modal" class="modal fade">
     <div class="modal-dialog">
@@ -193,7 +198,7 @@
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
   <script src="//bootstrapvalidator.com/vendor/bootstrapvalidator/js/bootstrapValidator.min.js"></script>
-  <script async src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+  <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
   <script>
 
   // We need to be able to handle new comments and replies
@@ -201,7 +206,13 @@
 
       // Prevent the button from doing anything
       event.preventDefault();
-      $("#modal input[name='parent']").val(parent);
+
+      // Reset the form
+      $('#add-form').trigger('reset');
+      $('#add-form').data('bootstrapValidator').resetForm();
+
+      // Add the parent should we have one
+      $("#add-form input[name='parent']").val(parent);
 
       // Show the modal
       $("#modal").modal();
@@ -210,13 +221,36 @@
   // Ensure that the page has loaded
   $( document ).ready(function() {
 
-
+    // Hook into the form validator. Which will validate the input and handle the form submission
     $('#add-form').bootstrapValidator({
         message: 'This value is not valid',
         submitHandler: function(validator, form) {
-          $.post(form.attr('action'), form.serialize(), function(result) {
-                console.log(result);
-            }, 'json');
+
+          // Send the details to the backend to be processed
+          $.post(form.attr('action'), form.serialize(), function(data) {
+
+              console.log(data['state']);
+              console.log(data['message']);
+              console.log(data['timestamp']);
+              console.table(data['data']);
+
+              // Handle the errors
+              if (data['state'] == 'error')
+              {
+                // We need to go through each error and output the result
+                $.each( data['data'], function( key, val ) {
+
+                  // Build the message, with all the errors
+                  validator.updateStatus(val, 'INVALID');
+                });
+
+              // Check if the response was successful
+              } else {
+
+                // On success just hide the modal
+                $("#modal.in").modal("hide");
+              }
+          }, 'json');
         },
         feedbackIcons: {
             valid: 'glyphicon glyphicon-ok',
@@ -236,7 +270,7 @@
                         message: 'The name must be more than 2 and less than 30 characters long'
                     },
                     regexp: {
-                        regexp: /^[a-zA-Z0-9_]+$/,
+                        regexp: /^[a-zA-Z0-9_ ]+$/,
                         message: 'The name can only consist of alphabetical, number and underscore'
                     }
                 }
@@ -250,11 +284,7 @@
                     stringLength: {
                         min: 6,
                         max: 1000,
-                        message: 'The comment must be more than 6 and less than 30 characters long'
-                    },
-                    regexp: {
-                        regexp: /^[a-zA-Z0-9_ \n\r]+$/,
-                        message: 'The comment can only consist of alphabetical, number and underscore'
+                        message: 'The comment must be more than 6 and less than 1000 characters long'
                     }
                 }
             },
@@ -271,6 +301,7 @@
         }
     });
 
+
     // Process the server response from the form submission
     function processJson(data) {
       alert(data.message);
@@ -282,11 +313,14 @@
       // Get the list of comments
       $.getJSON( URL, function( data ) {
 
+        // Get the counter
+        var counter = Number($("#counter").html());
+
         // Check if the response was successful
         if (data['state'] == 'success') {
 
-          if (clear == true) {
-            // Clear the loading
+          // Detect first load, clear body
+          if (( Number(data['data'].length) > 0) && ( counter == 0 )) {
             $("#main").html("");
           }
 
@@ -326,11 +360,16 @@
             else {
               $("#" + val['parent']).append( new_element );
             }
+
+            // Increment the counter with the count of the data we receive
+            $("#counter").html( Number(counter) + Number(data['data'].length) );
+
           });
         }
 
         // We ran into some sort of error
         else {
+
           // Print it out
           $("#loading").html("<h1>ERROR</h1>" + data['message']);
         }

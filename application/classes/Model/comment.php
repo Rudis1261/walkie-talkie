@@ -9,7 +9,7 @@ class Model_comment extends Model {
         $output = array();
 
         // Select all the data
-        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->execute()->as_array();
+        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->execute()->as_array();
 
         // We need some content
         if (!empty($result))
@@ -29,7 +29,7 @@ class Model_comment extends Model {
         $output = array();
 
         // Select all the data since the last date
-        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('timestamp', '>=', $timestamp)->execute()->as_array();
+        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->and_where('timestamp', '>=', $timestamp)->execute()->as_array();
 
         // We need some content
         if (!empty($result))
@@ -39,6 +39,28 @@ class Model_comment extends Model {
         }
 
         // Just return the output
+        return $output;
+    }
+
+    // Insert a new comment
+    public function add($inputArray)
+    {
+        $output = "Could not add new Comment";
+
+        // Try the insert
+        try
+        {
+            DB::insert('comments', array('id', 'parent',  'first_name', 'email', 'comment', 'timestamp', 'active'))->values($inputArray)->execute();
+            $output = true;
+        }
+
+        // Catch any exceptions we may encounter
+        catch ( Database_Exception $e )
+        {
+            $output = $e->getMessage();
+        }
+
+        // Return the result
         return $output;
     }
 
@@ -52,7 +74,8 @@ class Model_comment extends Model {
             foreach( (array) $inputArray as $index => $array)
             {
                 // Add the date and string version
-                $inputArray[$index]['comment'] = nl2br($array['comment']);
+                $inputArray[$index]['comment'] = nl2br(html_entity_decode($array['comment'], ENT_QUOTES));
+                $inputArray[$index]['first_name'] = html_entity_decode($array['first_name'], ENT_QUOTES);
                 $inputArray[$index]['age'] = $this->time2str($array['timestamp']);
                 $inputArray[$index]['date'] = date('d F Y, H:i', $array['timestamp']);
             }
