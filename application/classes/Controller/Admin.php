@@ -5,6 +5,7 @@ class Controller_Admin extends Controller_Template {
     // Making use of the home template view
     public $template = 'admin';
 
+    // We need a simple way to process forms
     public function process_forms()
     {
         $this->template->messages = array();
@@ -16,13 +17,12 @@ class Controller_Admin extends Controller_Template {
             // Get the comment
             $getComment = current($comments->id($_POST['id']));
 
-
             // Switch through the cases
             switch ($_POST['action'])
             {
                 // Trash request
                 case 'trash':
-                    // Inject the default form
+                    // Confirmation form
                     $this->template->content = Form::open("Admin", array("class" => "form form-vertical well", "method" => "post"));
                     $this->template->content .= "<h4>Confirm Comment Deletion</h4>";
 
@@ -49,14 +49,14 @@ class Controller_Admin extends Controller_Template {
                     {
                         $trash = $comments->trash($_POST['id']);
 
-                        if ($trash)
+                        if ($trash == true)
                         {
                             $this->template->messages["info"][] = "Successfully deleted comment";
                         }
 
                         else
                         {
-                            $this->template->messages["error"][] = "Failed to delete comment";
+                            $this->template->messages["error"][] = "Failed to delete comment, it's most likely already deleted";
                         }
                     }
                     break;
@@ -72,7 +72,7 @@ class Controller_Admin extends Controller_Template {
     public function action_index()
     {
         // Prepare the page and send the details to the template
-        $this->template->title = "Walkie-talkie";
+        $this->template->title = "Convo";
         $this->template->icon = "comment";
         $this->template->content = "";
 
@@ -111,13 +111,13 @@ class Controller_Admin extends Controller_Template {
                 $trash = Form::open("Admin", array("method" => "post"));
                 $trash .= Form::hidden("id", $comment['id']);
                 $trash .= Form::hidden("action", 'trash');
-                $trash .= Form::button(NULL, '<span class="glyphicon glyphicon-trash"></span>', array("class" => "btn btn-danger btn-sm", "type" => "submit"));
+                $trash .= Form::button(NULL, '<span class="glyphicon glyphicon-trash"></span>', array("class" => "btn btn-danger btn-sm", "type" => "submit", "title" => "Trash comment"));
                 $trash .= Form::close();
 
                 $edit = Form::open("Admin", array("method" => "post"));
                 $edit .= Form::hidden("id", $comment['id']);
                 $edit .= Form::hidden("action", 'edit');
-                $edit .= Form::button(NULL, '<span class="glyphicon glyphicon-pencil"></span>', array("class" => "btn btn-default btn-sm confirm", "type" => "submit"));
+                $edit .= Form::button(NULL, '<span class="glyphicon glyphicon-pencil"></span>', array("class" => "btn btn-default btn-sm", "type" => "submit", "title" => "Edit comment"));
                 $edit .= Form::close();
 
                 // Add the row

@@ -1,7 +1,7 @@
 CREATE DATABASE kohana;
 USE kohana;
-GRANT USAGE ON kohana.* TO walkie@localhost IDENTIFIED BY 'talkie';
-GRANT ALL PRIVILEGES ON kohana.* TO walkie@localhost;
+GRANT USAGE ON kohana.* TO convo@localhost IDENTIFIED BY 'convo';
+GRANT ALL PRIVILEGES ON kohana.* TO convo@localhost;
 
 CREATE TABLE `comments` (
   `id` int(15) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,

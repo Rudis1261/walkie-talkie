@@ -138,11 +138,11 @@
           if ($type == "error")
           {
             $class = "danger";
+          }
             echo '<div class="alert alert-' . $class . '">
                     <div><b>' . strtoupper($type) . '</b></div>
                     <div>' . implode("</div>\n<div>", $message) . '</div>
                   </div>';
-          }
         }
       }
 

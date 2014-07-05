@@ -9,7 +9,7 @@ class Controller_Home extends Controller_Template {
     public function action_index()
 	{
         # Prepare the page and send the details to the template
-        $this->template->title = "Walkie-talkie";
+        $this->template->title = "Convo";
         $this->template->icon = "comment";
 	}
 }
