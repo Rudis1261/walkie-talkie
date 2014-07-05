@@ -95,6 +95,7 @@ class Controller_Admin extends Controller_Template {
             {
                 // Trash request
                 case 'trash':
+
                     // Confirmation form
                     $this->template->content = Form::open("Admin", array("class" => "form form-vertical well", "method" => "post"));
                     $this->template->content .= "<h4>Confirm Comment Deletion</h4>";
@@ -103,7 +104,7 @@ class Controller_Admin extends Controller_Template {
                     {
                         $this->template->content .= "<p><b>AUTHOR</b> " . $getComment['first_name'] . "<br />";
                         $this->template->content .= "<b>DATE</b> " . $getComment['date'] . "<br />";
-                        $this->template->content .= "<b>COMMENT</b> " . $getComment['comment'] . "</p>";
+                        $this->template->content .= "<b>COMMENT</b> " . nl2br($getComment['comment']) . "</p>";
                     }
 
                     $this->template->content .= Form::hidden("id", $_POST['id']);
@@ -122,11 +123,50 @@ class Controller_Admin extends Controller_Template {
                     // Should the form be displayed?
                     $display = true;
 
+                    // Set the default values
+                    $values = array(
+                        "first_name" => $getComment['first_name'],
+                        "email" => $getComment['email'],
+                        "comment" => $getComment['comment']
+                    );
+
+                    // Set blank errors
+                    $errors = array(
+                        "first_name" => array(
+                            "class" => "",
+                            "message" => "",
+                            "min" => 2,
+                            "max" => 30
+                        ),
+                        "email" => array(
+                            "class" => "",
+                            "message" => "",
+                            "min" => 0,
+                            "max" => 0
+                        ),
+                        "comment" => array(
+                            "class" => "",
+                            "message" => "",
+                            "min" => 6,
+                            "max" => 1000
+                        )
+                    );
+
                     // Check for a submit and process the values
                     if (!empty($_POST['confirm']) AND $_POST['confirm'] == "Save")
                     {
+                        // Trim white spaces
+                        $clean = $comments->cleanse($_POST);
+
+                        // Assign the new values from the post
+                        foreach($values as $key => $value)
+                        {
+                            // Only use the indexes we are looking for
+                            $values[$key] = $clean[$key];
+                        }
+
                         // Start the validation engine up
-                        $object = Validation::factory($_POST);
+                        $object = Validation::factory($clean);
                         $object
                             ->rule('first_name', 'not_empty')
                             ->rule('first_name', 'min_length', array(':value', '2'))
@@ -145,19 +185,71 @@ class Controller_Admin extends Controller_Template {
                         {
                             // Build the info to insert
                             $updateValues = array(
-                                "id"            => HTML::chars(HTML::entities($_POST['id'])),
-                                "first_name"    => HTML::chars(HTML::entities($_POST['first_name'])),
-                                "email"         => HTML::chars(HTML::entities($_POST['email'])),
-                                "comment"       => HTML::chars(HTML::entities($_POST['comment'])),
+                                "id"            => $clean['id'],
+                                "first_name"    => $clean['first_name'],
+                                "email"         => $clean['email'],
+                                "comment"       => $clean['comment']
                             );
-                            var_dump($updateValues);
+
+                            // Attempt to update the comment
+                            $doUpdate = $comments->edit($updateValues);
+
+                            // Success
+                            if ($doUpdate)
+                            {
+                                $this->template->messages["info"][] = "Changes Saved";
+                            }
+
+                            // Failure
+                            else
+                            {
+                                $this->template->messages["error"][] = "Could not update comment";
+                            }
+
+                            // Hide the form as complete
                             $display = false;
                         }
 
                         // Failure
                         else
                         {
-                            $this->template->messages["error"][] = "Fields are invalid";
+                            // Check that there were errors indeed
+                            if (!empty($object->errors()))
+                            {
+                                // Loop through them
+                                foreach($object->errors() as $key => $error)
+                                {
+                                    // Custom error messages
+                                    switch (current($error)) {
+                                        case 'not_empty':
+                                            $message = "Field cannot be empty";
+                                            break;
+
+                                        case 'min_length':
+                                            $message = "Field needs to be at least ". $errors[$key]["min"] ." in length";
+                                            break;
+
+                                        case 'max_length':
+                                            $message = "Field needs to be a maximum of ". $errors[$key]["max"] ." in length";
+                                            break;
+
+                                        case 'email_domain':
+                                            $message = "Email Address domain does not exist, address appears to be invalid";
+                                            break;
+
+                                        default:
+                                            $message = "Application issue, error unknown";
+                                            break;
+                                    }
+
+                                    // Update the errors
+                                    $errors[$key]['class'] = "has-error";
+                                    $errors[$key]['message'] = $message;
+                                }
+                            }
+
+                            // Set the error to indicate there is issues
+                            $this->template->messages["error"][] = "Some errors were encountered, details below";
                         }
                     }
 
@@ -170,17 +262,20 @@ class Controller_Admin extends Controller_Template {
                         $this->template->content .= Form::hidden("id", $_POST['id']);
                         $this->template->content .= Form::hidden("action", 'edit');
 
-                        $this->template->content .= '<div class="form-group">';
-                        $this->template->content .= Form::input("first_name", $getComment['first_name'], array("class" => "form-control", "type" => "text", "placeholder" => "John Doe"));
-                        $this->template->content .= "</div>";
+                        $this->template->content .= '<div class="form-group '. $errors['first_name']['class'] .'">';
+                        $this->template->content .= Form::label("Name", NULL, array("class" => "input-label"));
+                        $this->template->content .= Form::input("first_name", $values['first_name'], array("class" => "form-control", "type" => "text", "placeholder" => "John Doe"));
+                        $this->template->content .= "<span class='help-block'>". $errors['first_name']['message'] ."</span></div>";
 
-                        $this->template->content .= '<div class="form-group">';
-                        $this->template->content .= Form::input("email", $getComment['email'], array("class" => "form-control", "type" => "text", "placeholder" => "john.doe@mail.com"));
-                        $this->template->content .= "</div>";
+                        $this->template->content .= '<div class="form-group '. $errors['email']['class'] .'">';
+                        $this->template->content .= Form::label("Email Address", NULL, array("class" => "input-label"));
+                        $this->template->content .= Form::input("email", $values['email'], array("class" => "form-control", "type" => "text", "placeholder" => "john.doe@mail.com"));
+                        $this->template->content .= "<span class='help-block'>". $errors['email']['message'] ."</span></div>";
 
-                        $this->template->content .= '<div class="form-group">';
-                        $this->template->content .= Form::textarea("comment", str_replace("<br />", "\n", $getComment['comment']), array("class" => "form-control", "type" => "text", "placeholder" => "Comment"));
-                        $this->template->content .= "</div>";
+                        $this->template->content .= '<div class="form-group '. $errors['comment']['class'] .'">';
+                        $this->template->content .= Form::label("Comment", NULL, array("class" => "input-label"));
+                        $this->template->content .= Form::textarea("comment", $values['comment'], array("class" => "form-control", "type" => "text", "placeholder" => "Comment"));
+                        $this->template->content .= "<span class='help-block'>". $errors['comment']['message'] ."</span></div>";
 
                         $this->template->content .= '<div class="form-group">';
                         $this->template->content .= Form::input("confirm", "Save", array("class" => "btn btn-danger btn-lg", "type" => "submit"));

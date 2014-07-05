@@ -47,9 +47,10 @@ class Controller_Ajax extends Controller {
         # Select all the
         $comment = Model::factory("comment");
         $json = Model::factory("json");
+        $clean = $comments->cleanse($_POST);
 
         // Start the validation engine up
-        $object = Validation::factory($_POST);
+        $object = Validation::factory($clean);
         $object
             ->rule('first_name', 'not_empty')
             ->rule('first_name', 'min_length', array(':value', '2'))
@@ -68,15 +69,15 @@ class Controller_Ajax extends Controller {
         {
             // We can now try and insert the comment
             // The parent isn't strictly checked, if nothing is received ensure that we insert a null
-            $getParent = (isset($_POST['parent'])) ? $_POST['parent'] : 0;
+            $getParent = (isset($clean['parent'])) ? $clean['parent'] : 0;
 
             // Build the info to insert
             $insertValues = array(
                 "id"            => NULL,
-                "parent"        => HTML::chars(HTML::entities($getParent)),
-                "first_name"    => HTML::chars(HTML::entities($_POST['first_name'])),
-                "email"         => HTML::chars(HTML::entities($_POST['email'])),
-                "comment"       => HTML::chars(HTML::entities($_POST['comment'])),
+                "parent"        => $getParent,
+                "first_name"    => $clean['first_name'],
+                "email"         => $clean['email'],
+                "comment"       => $clean['comment'],
                 "timestamp"     => time(),
                 "active"        => 1
             );
@@ -95,7 +96,7 @@ class Controller_Ajax extends Controller {
             else
             {
                 // Show why the insert failed
-                $this->error($insert);
+                $json->error($insert);
             }
         }
 

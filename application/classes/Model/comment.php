@@ -23,7 +23,7 @@ class Model_comment extends Model {
         if (!empty($result))
         {
             // Transform the data somewhat
-            $output = $this->transform($result);
+            $output = $this->transform($result, true);
         }
 
         // Just return the output
@@ -63,7 +63,7 @@ class Model_comment extends Model {
         if (!empty($result))
         {
             // Transform the data somewhat
-            $output = $this->transform($result);
+            $output = $this->transform($result, true);
         }
 
         // Just return the output
@@ -92,8 +92,60 @@ class Model_comment extends Model {
         return $output;
     }
 
+    // Update function
+    public function edit($inputArray)
+    {
+        $output = "Could not edit the Comment";
+
+        // Try the insert
+        try
+        {
+            DB::update('comments')->set(array('first_name'=>$inputArray['first_name'], 'email'=>$inputArray['email'], 'comment'=>$inputArray['comment']))->where('id','=',$inputArray['id'])->execute();
+            //DB::insert('comments', array('id', 'parent',  'first_name', 'email', 'comment', 'timestamp', 'active'))->values($inputArray)->execute();
+            $output = true;
+        }
+
+        // Catch any exceptions we may encounter
+        catch ( Database_Exception $e )
+        {
+            $output = $e->getMessage();
+        }
+
+        // Return the result
+        return $output;
+    }
+
+    // Trash the comment
+    public function trash($id)
+    {
+        return DB::update('comments')->set(array('active'=>'0'))->where('id','=',$id)->execute();
+    }
+
+    // Cleanse the input before we save it
+    public function cleanse($inputArray)
+    {
+        $output = array();
+
+        // Check that we have an input to work with
+        if (!empty($inputArray) AND is_array($inputArray))
+        {
+            // Cleanse the details somewhat
+            foreach ($inputArray as $index => $array)
+            {
+                $output[$index] = strip_tags($array);
+                $output[$index] = preg_replace('/^\p{Z}+|\p{Z}+$/u', '', $output[$index]);
+                $output[$index] = htmlspecialchars($output[$index]);
+                $output[$index] = trim($output[$index]);
+                $output[$index] = HTML::entities($output[$index]);
+            }
+        }
+
+        // Return output
+        return $output;
+    }
+
     // Transform the array somewhat
-    public function transform($inputArray=false)
+    public function transform($inputArray=false, $break=false)
     {
         // Only attempt to transform the array should we actually have one
         if(!empty($inputArray))
@@ -102,19 +154,20 @@ class Model_comment extends Model {
             foreach( (array) $inputArray as $index => $array)
             {
                 // Add the date and string version
-                $inputArray[$index]['comment'] = nl2br(html_entity_decode($array['comment'], ENT_QUOTES));
+                if ($break)
+                {
+                    $inputArray[$index]['comment'] = nl2br(html_entity_decode($array['comment'], ENT_QUOTES));
+                }
+                else
+                {
+                    $inputArray[$index]['comment'] = html_entity_decode($array['comment'], ENT_QUOTES);
+                }
                 $inputArray[$index]['first_name'] = html_entity_decode($array['first_name'], ENT_QUOTES);
                 $inputArray[$index]['age'] = $this->time2str($array['timestamp']);
                 $inputArray[$index]['date'] = date('d F Y, H:i', $array['timestamp']);
             }
         }
         return $inputArray;
-    }
-
-    // Trash the comment
-    public function trash($id)
-    {
-        return DB::update('comments')->set(array('active'=>'0'))->where('id','=',$id)->execute();
     }
 
     // Returns an English representation of a date
