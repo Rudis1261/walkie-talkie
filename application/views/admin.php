@@ -28,7 +28,7 @@
 
       #header a { margin-top: 20px; }
       #header a h1,
-      #header a:hover h1 { color: white; margin-top: 20px; text-decoration: none; }
+      #header .no-line { text-decoration: none; color: white; }
       #header .container { padding: 0px 12px; }
       #loading { margin-top: 170px; }
       #loading h1 { font-size: 50px; }
@@ -117,7 +117,7 @@
           </a>
         </div>
       </div>
-      <a href="/">
+      <a href="/" class="no-line">
         <h1>
           <span class="glyphicon glyphicon-<?php echo $icon; ?>"></span>
           <?php echo $title; ?>

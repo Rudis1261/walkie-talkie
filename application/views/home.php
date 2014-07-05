@@ -27,8 +27,7 @@
       }
 
       #header a { margin-top: 20px; }
-      #header a h1,
-      #header a:hover h1 { color: white; margin-top: 20px; text-decoration: none; }
+      #header .no-line { text-decoration: none; color: white; }
       #header .container { padding: 0px 12px; }
       #loading { margin-top: 170px; }
       #loading h1 { font-size: 50px; }
@@ -125,7 +124,7 @@
           </a>
         </div>
       </div>
-      <a href="/">
+      <a href="/" class="no-line">
         <h1>
           <span class="glyphicon glyphicon-<?php echo $icon; ?>"></span>
           <?php echo $title; ?>
@@ -213,9 +212,6 @@
 
   // We need to be able to handle new comments and replies
   function reply(parent) {
-
-      // Prevent the button from doing anything
-      event.preventDefault();
 
       // Reset the form, and validation on it
       $('#add-form').trigger('reset');
@@ -363,7 +359,14 @@
 
             // Child comment, append to parent
             else {
-              $("#" + val['parent']).append( new_element );
+
+              if ($("#" + val['parent']).html() != undefined) {
+                $("#" + val['parent']).append( new_element );
+              }
+
+              else {
+                $("#main").append( new_element );
+              }
             }
 
             // Increment the counter with the count of the data we receive
