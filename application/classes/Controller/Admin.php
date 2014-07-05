@@ -24,7 +24,7 @@ class Controller_Admin extends Controller_Template {
         $table = Model::factory("table");
         $output = "No results found";
 
-        // Set headings
+        // Set the table headings
         $table->headings(
             array(
                 "ID",
@@ -44,13 +44,15 @@ class Controller_Admin extends Controller_Template {
             // loop through the comments and create the table
             foreach($getData as $comment)
             {
-                // Inject the default form
+                // Inject the default forms
+                // Trash "delete" button form
                 $trash = Form::open("Admin", array("method" => "post"));
                 $trash .= Form::hidden("id", $comment['id']);
                 $trash .= Form::hidden("action", 'trash');
                 $trash .= Form::button(NULL, '<span class="glyphicon glyphicon-trash"></span>', array("class" => "btn btn-danger btn-sm", "type" => "submit", "title" => "Trash comment"));
                 $trash .= Form::close();
 
+                // Edit button form
                 $edit = Form::open("Admin", array("method" => "post"));
                 $edit .= Form::hidden("id", $comment['id']);
                 $edit .= Form::hidden("action", 'edit');
@@ -73,7 +75,6 @@ class Controller_Admin extends Controller_Template {
             $output = $table->render();
         }
 
-
         # Add the output
         $this->template->comments = $output;
     }
@@ -81,14 +82,20 @@ class Controller_Admin extends Controller_Template {
     // We need a simple way to process forms
     public function process_forms()
     {
+        // Set a default message array
         $this->template->messages = array();
+
+        // Hook into the comment Model
         $comments = $comment = Model::factory("comment");
 
         // Process forms
         if (!empty($_POST['action']) AND !empty($_POST['id']))
         {
+            // Clean post details up
+            $clean = $comments->cleanse($_POST);
+
             // Get the comment
-            $getComment = current($comments->id($_POST['id']));
+            $getComment = current($comments->id($clean['id']));
 
             // Switch through the cases
             switch ($_POST['action'])
@@ -100,20 +107,26 @@ class Controller_Admin extends Controller_Template {
                     $this->template->content = Form::open("Admin", array("class" => "form form-vertical well", "method" => "post"));
                     $this->template->content .= "<h4>Confirm Comment Deletion</h4>";
 
+                    // Ensure that we have a comment to get the information from
                     if (!empty($getComment))
                     {
+                        // Add the content
                         $this->template->content .= "<p><b>AUTHOR</b> " . $getComment['first_name'] . "<br />";
                         $this->template->content .= "<b>DATE</b> " . $getComment['date'] . "<br />";
                         $this->template->content .= "<b>COMMENT</b> " . nl2br($getComment['comment']) . "</p>";
                     }
 
-                    $this->template->content .= Form::hidden("id", $_POST['id']);
+                    // We need some hidden content
+                    $this->template->content .= Form::hidden("id", $clean['id']);
                     $this->template->content .= Form::hidden("action", 'trash-confirmed');
+
+                    // And to group the confirm buttons
                     $this->template->content .= '<div class="form-group">';
                     $this->template->content .= Form::input("confirm", "Yes", array("class" => "btn btn-default btn-lg", "type" => "submit"));
                     $this->template->content .= "&nbsp;&nbsp;";
                     $this->template->content .= Form::input("confirm", "No", array("class" => "btn btn-danger btn-lg", "type" => "submit"));
                     $this->template->content .= "</div>";
+
                     $this->template->content .= Form::close();
                     break;
 
@@ -155,9 +168,6 @@ class Controller_Admin extends Controller_Template {
                     // Check for a submit and process the values
                     if (!empty($_POST['confirm']) AND $_POST['confirm'] == "Save")
                     {
-                        // Trim white spaces
-                        $clean = $comments->cleanse($_POST);
-
                         // Assign the new values from the post
                         foreach($values as $key => $value)
                         {
@@ -220,7 +230,8 @@ class Controller_Admin extends Controller_Template {
                                 foreach($object->errors() as $key => $error)
                                 {
                                     // Custom error messages
-                                    switch (current($error)) {
+                                    switch (current($error))
+                                    {
                                         case 'not_empty':
                                             $message = "Field cannot be empty";
                                             break;
@@ -256,10 +267,10 @@ class Controller_Admin extends Controller_Template {
                     // Only display when not posted / validated / saved
                     if ($display)
                     {
-                        // Confirmation form
+                        // Edit form, set default values. overriden with post values. including error messages and states
                         $this->template->content = Form::open("Admin", array("class" => "form form-vertical well", "method" => "post"));
                         $this->template->content .= "<h4>Update Comment</h4>";
-                        $this->template->content .= Form::hidden("id", $_POST['id']);
+                        $this->template->content .= Form::hidden("id", $clean['id']);
                         $this->template->content .= Form::hidden("action", 'edit');
 
                         $this->template->content .= '<div class="form-group '. $errors['first_name']['class'] .'">';
@@ -289,7 +300,7 @@ class Controller_Admin extends Controller_Template {
                     if (isset($_POST['confirm']) AND $_POST['confirm'] == "Yes")
                     {
                         // Try and delete the trash
-                        $trash = $comments->trash($_POST['id']);
+                        $trash = $comments->trash($clean['id']);
 
                         // Success
                         if ($trash == true)
@@ -305,7 +316,7 @@ class Controller_Admin extends Controller_Template {
                     }
                     break;
 
-
+                // Empty default
                 default:
                     break;
             }

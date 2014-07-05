@@ -5,35 +5,34 @@ class Model_table extends Model {
     public $table_attributes        = array();
     public $table_heading           = array();
     public $table_children          = array();
-    public $Error;
 
-    # How does it all begin?
+    // How does it all begin?
     function __construct( $overide_defaults=false )
     {
-        # We need some basic form attributes to start off
+        // We need some basic form attributes to start off
         $this->table_attributes = array(
             "cellpadding"   => "0",
             "cellspacing"   => "0",
             "class"         => "table table-striped table-hover table-rounded table-bordered"
         );
 
-        # We may also want to override the defaults on construct
+        // We may also want to override the defaults on construct
         if ($overide_defaults)
         {
-            # The override them
+            // The override them
             $this->table_attributes = (array)$overide_defaults;
         }
     }
 
 
-    # We may want to be able to alter or add some attributes
+    // We may want to be able to alter or add some attributes
     function attributes($array_input=false)
     {
 
-        # Ensure it is an array
+        // Ensure it is an array
         if (is_array($array_input))
         {
-            # Cool it's an array.
+            // Cool it's an array.
             foreach($array_input as $attribute => $value)
             {
                 $this->table_attributes[$attribute] = $value;
@@ -43,56 +42,56 @@ class Model_table extends Model {
         return false;
     }
 
-    # We may want to have some headers
+    // We may want to have some headers
     function heading($array)
     {
         $this->table_heading = $array;
         return true;
     }
 
-    # Alias to heading
+    // Alias to heading
     function headers($array)
     {
         return $this->heading($array);
     }
 
-    # Alias to heading
+    // Alias to heading
     function headings($array)
     {
         return $this->heading($array);
     }
 
-    # Add more elements (Children)
+    // Add more elements (Children)
     function addRow($array)
     {
         $this->table_children[] = $array;
         return true;
     }
 
-    # We may also want to add a class
+    // We may also want to add a class
     function addClass($classes_to_add=false)
     {
 
-        # Ensure it is an array
+        // Ensure it is an array
         if ($classes_to_add)
         {
-            # Explode by space
+            // Explode by space
             $classes = explode(' ', $this->table_attributes['class']);
 
-            # Loop through the new additions
+            // Loop through the new additions
             foreach( (array)$classes_to_add as $class_to_add)
             {
                 $class_to_add = strtolower($class_to_add);
 
-                # Ensure that the section does not already exists
+                // Ensure that the section does not already exists
                 if (!in_array($class_to_add, $classes))
                 {
-                    # Then append the option and implode the array
+                    // Then append the option and implode the array
                     $classes[] = $class_to_add;
                 }
             }
 
-            # Only do the implode once
+            // Only do the implode once
             $this->table_attributes['class'] = implode(" ", $classes);
             return true;
         }
@@ -100,25 +99,25 @@ class Model_table extends Model {
     }
 
 
-    # We may also want to remove a class
+    // We may also want to remove a class
     function removeClass($classes_to_remove=false)
     {
 
-        # Ensure it is an array
+        // Ensure it is an array
         if ($classes_to_remove)
         {
-            # Explode by space
+            // Explode by space
             $classes = explode(' ', $this->table_attributes['class']);
 
-            # Loop through the things we want removed
+            // Loop through the things we want removed
             foreach( (array)$classes_to_remove as $class_to_remove)
             {
                 $class_to_remove = strtolower($class_to_remove);
 
-                # Loop throug the classes
+                // Loop throug the classes
                 foreach($classes as $index => $class)
                 {
-                    # If the class is indeed found then unset it from the exploded array
+                    // If the class is indeed found then unset it from the exploded array
                     if ($class_to_remove == $class)
                     {
                         unset($classes[$index]);
@@ -126,7 +125,7 @@ class Model_table extends Model {
                 }
             }
 
-            # Only do the implode once
+            // Only do the implode once
             $this->table_attributes['class'] = implode(" ", $classes);
             return true;
         }
@@ -134,49 +133,49 @@ class Model_table extends Model {
     }
 
 
-    # This function will be used to implode an array into an HTML format
+    // This function will be used to implode an array into an HTML format
     function implode_attributes($array_input=false)
     {
-        # Ensure it is an array
+        // Ensure it is an array
         if (is_array($array_input))
         {
-            # We need a string to put this all toghether
+            // We need a string to put this all toghether
             $output = " ";
 
-            # Cool it's an array.
+            // Cool it's an array.
             foreach($array_input as $attribute => $value)
             {
-                # Drop the tag
+                // Drop the tag
                 if ($attribute == "tag") continue;
                 if ($attribute == "value") continue;
 
-                # If it's empty
+                // If it's empty
                 if ($value == "")
                 {
-                    # Then it's solely an attribute
+                    // Then it's solely an attribute
                     $output .= $attribute . ' ';
 
                 } else {
 
-                    # append the Attribute value pair
+                    // append the Attribute value pair
                     $output .= $attribute . '="' . $value .'" ';
                 }
             }
 
-            # Return the output
+            // Return the output
             return $output;
         }
-        # Otherwise return the string as is
+        // Otherwise return the string as is
         return $array_input;
     }
 
-    # This function will end off the form and return it for output
+    // This function will end off the form and return it for output
     function render()
     {
-        # Build up the form
+        // Build up the form
         $output = "\n<table " . $this->implode_attributes( $this->table_attributes ) . ">\n";
 
-        # Check if the heading are empty or not
+        // Check if the heading are empty or not
         if (!empty($this->table_heading))
         {
             $output .= "\t<thead>\n";
@@ -194,7 +193,7 @@ class Model_table extends Model {
             $output .= "\t</thead>\n";
         }
 
-        # If there are children then loop through them
+        // If there are children then loop through them
         if (!empty($this->table_children))
         {
             $output .= "\t<tbody>\n";

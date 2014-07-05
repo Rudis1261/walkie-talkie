@@ -3,6 +3,7 @@
 class Model_json extends Model {
 
     // This controller will provide a success / failure response along with a message to be displayed should and error be encountered
+    // My interpretation of a simple API
     public $output = array(
         "state"         => "error",
         "message"       => "No valid action provided",
@@ -13,6 +14,7 @@ class Model_json extends Model {
     // Set the optional data
     public function data($data)
     {
+        // We expect an array. Set it as the data
         $this->output['data'] = $data;
     }
 
@@ -29,6 +31,7 @@ class Model_json extends Model {
             $this->output["message"] = $message;
         }
 
+        // Set a generic error message
         else
         {
             $this->output["message"] = "Empty message";
@@ -41,7 +44,7 @@ class Model_json extends Model {
     // Return a successful output
     public function success($message="")
     {
-        # Set a failed output
+        // Set a failed output
         $this->output["state"] = "success";
         $this->output["timestamp"] = time();
 
@@ -51,19 +54,20 @@ class Model_json extends Model {
             $this->output["message"] = $message;
         }
 
+        // Set a generic message
         else
         {
             $this->output["message"] = "Empty message";
         }
 
-        # Render it out
+        // Render it out
         $this->render();
     }
 
-    # Render the output
+    // Render the output
     public function render()
     {
-        # Echo out the json_encoded detail
+        // Echo out the json_encoded detail
         echo json_encode($this->output);
     }
 }

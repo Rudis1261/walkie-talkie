@@ -31,7 +31,7 @@
       #header .container { padding: 0px 12px; }
       #loading { margin-top: 170px; }
       #loading h1 { font-size: 50px; }
-      #timezone { display: none; }
+      #timestamp { display: none; }
       #counter { display: none; }
       #end { color: #ccc; }
 
@@ -127,7 +127,7 @@
       <a href="/" class="no-line">
         <h1>
           <span class="glyphicon glyphicon-<?php echo $icon; ?>"></span>
-          <?php echo $title; ?>
+          <span class="hidden-xs"><?php echo $title; ?></span>
         </h1>
       </a>
     </div>
@@ -149,7 +149,7 @@
 
   <!-- Some extras -->
   <div id="end" align="center"><h1>THE END<h1></div>
-  <div id="timezone"><?php echo time(); ?></div>
+  <div id="timestamp"><?php echo time(); ?></div>
   <div id="counter">0</div>
 
   <!-- Add the modal which will hold the form -->
@@ -227,7 +227,7 @@
   // Ensure that the page has loaded
   $( document ).ready(function() {
 
-    // Hook into the form validator. Which will validate the input and handle the form submission
+    // Hook into the form validator. Which will validate the input and handle the form submission should it pass the validation process
     $('#add-form').bootstrapValidator({
         message: 'This value is not valid',
         submitHandler: function(validator, form) {
@@ -236,8 +236,8 @@
           $.post(form.attr('action'), form.serialize(), function(data) {
 
               // Handle the errors
-              if (data['state'] == 'error')
-              {
+              if (data['state'] == 'error') {
+
                 // We need to go through each error and output the result
                 $.each( data['data'], function( key, val ) {
 
@@ -302,14 +302,8 @@
         }
     });
 
-
-    // Process the server response from the form submission
-    function processJson(data) {
-      alert(data.message);
-    }
-
     // I would like to make the call to the back-end generic for the updating of the comments
-    function backendCall(URL, clear)
+    function backendCall(URL)
     {
       // Get the list of comments
       $.getJSON( URL, function( data ) {
@@ -326,7 +320,7 @@
           }
 
           // Use a holder for the data
-          $("#timezone").html(data['timestamp']);
+          $("#timestamp").html(data['timestamp']);
 
           // Loop through all the data
           $.each( data['data'], function( key, val ) {
@@ -335,7 +329,7 @@
             var element_class = "";
 
             // Should it be a child entry, add the child class
-            if (val['parent'] > 0) {
+            if ( val['parent'] > 0 && $("#" + val['parent']).html() != undefined ) {
               element_class = "child";
             }
 
@@ -343,30 +337,21 @@
             var new_element = "<div class='comments " + element_class + "' id='" + val['id'] + "'>\
                                 <div class='wrapper'>\
                                   <span class='glyphicon glyphicon-comment'></span>\
-                                  <!--<i class='pull-right small'>" + val['date'] + "</i>-->\
                                   <a class='uppercase' href='mailto:" + val['email'] + "'>" + val['first_name'] + "</a> \
                                   <i class='small' title='" + val['date'] + "'>" + val['age'] + "</i>\
-                                  <!--" + val['id'] + "," + val['parent'] + "-->\
                                   <p>" + val['comment'] + "</p>\
                                   <a onClick='reply(\"" + val['id'] + "\"); return false;' href=''>Reply to comment <span class='glyphicon glyphicon-share-alt'></span></a>\
                                 </div>\
                               </div>";
 
-            // Parent comment, append to the main container
-            if (val['parent'] == 0) {
-              $("#main").append( new_element );
+            // Child comment, append to parent, that is if the parent exist
+            if ($("#" + val['parent']).html() != undefined) {
+              $("#" + val['parent']).append( new_element );
             }
 
-            // Child comment, append to parent
+            // Otherwise, if the parent does not exist or there is no parent inferred add to the bottom
             else {
-
-              if ($("#" + val['parent']).html() != undefined) {
-                $("#" + val['parent']).append( new_element );
-              }
-
-              else {
-                $("#main").append( new_element );
-              }
+              $("#main").append( new_element );
             }
 
             // Increment the counter with the count of the data we receive
@@ -385,16 +370,16 @@
     }
 
     // When the page loads the first time we will need to get all the comments in the system
-    backendCall("/Ajax/Comments", true);
+    backendCall("/Ajax/Comments");
 
-    // Check for updates every 2 seconds
+    // Check for updates every 5 seconds
     setInterval(function() {
 
       // Get the last updated timestamp
-      var getTimestamp = $("#timezone").html();
+      var getTimestamp = $("#timestamp").html();
 
       // We are looking for any comments since then
-      backendCall("/Ajax/Since/" + getTimestamp, false);
+      backendCall("/Ajax/Since/" + getTimestamp);
     }, 5000);
 
   });

@@ -11,12 +11,24 @@ class Model_comment extends Model {
         // Select all the data
         if ($order == false AND $direction == false)
         {
-            $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->execute()->as_array();
+            // Try and select the information
+            $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')
+                        ->from('comments')
+                        ->where('active', "=", 1)
+                        ->execute()
+                        ->as_array();
         }
 
+        // We are looking for all the data, but in a particular order
         else
         {
-            $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->order_by($order, $direction)->execute()->as_array();
+            // Try and select the information
+            $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')
+                        ->from('comments')
+                        ->where('active', "=", 1)
+                        ->order_by($order, $direction)
+                        ->execute()
+                        ->as_array();
         }
 
         // We need some content
@@ -37,7 +49,11 @@ class Model_comment extends Model {
         $output = array();
 
         // Select all the data
-        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('id', "=", $id)->execute()->as_array();
+        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')
+                    ->from('comments')
+                    ->where('id', "=", $id)
+                    ->execute()
+                    ->as_array();
 
         // We need some content
         if (!empty($result))
@@ -57,7 +73,12 @@ class Model_comment extends Model {
         $output = array();
 
         // Select all the data since the last date
-        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')->from('comments')->where('active', "=", 1)->and_where('timestamp', '>=', $timestamp)->execute()->as_array();
+        $result = DB::select('id', 'parent',  'first_name', 'email', 'comment', 'timestamp')
+                    ->from('comments')
+                    ->where('active', "=", 1)
+                    ->and_where('timestamp', '>=', $timestamp)
+                    ->execute()
+                    ->as_array();
 
         // We need some content
         if (!empty($result))
@@ -73,12 +94,15 @@ class Model_comment extends Model {
     // Insert a new comment
     public function add($inputArray)
     {
+        // Setting a default error message
         $output = "Could not add new Comment";
 
         // Try the insert
         try
         {
-            DB::insert('comments', array('id', 'parent',  'first_name', 'email', 'comment', 'timestamp', 'active'))->values($inputArray)->execute();
+            DB::insert('comments', array('id', 'parent',  'first_name', 'email', 'comment', 'timestamp', 'active'))
+                ->values($inputArray)
+                ->execute();
             $output = true;
         }
 
@@ -95,12 +119,16 @@ class Model_comment extends Model {
     // Update function
     public function edit($inputArray)
     {
+        // Set a default error message
         $output = "Could not edit the Comment";
 
         // Try the insert
         try
         {
-            DB::update('comments')->set(array('first_name'=>$inputArray['first_name'], 'email'=>$inputArray['email'], 'comment'=>$inputArray['comment']))->where('id','=',$inputArray['id'])->execute();
+            DB::update('comments')
+                ->set(array('first_name'=>$inputArray['first_name'], 'email'=>$inputArray['email'], 'comment'=>$inputArray['comment']))
+                ->where('id','=',$inputArray['id'])
+                ->execute();
             //DB::insert('comments', array('id', 'parent',  'first_name', 'email', 'comment', 'timestamp', 'active'))->values($inputArray)->execute();
             $output = true;
         }
@@ -118,12 +146,17 @@ class Model_comment extends Model {
     // Trash the comment
     public function trash($id)
     {
-        return DB::update('comments')->set(array('active'=>'0'))->where('id','=',$id)->execute();
+        // We merely mark a comment as inactive should we want to delete it
+        return DB::update('comments')
+                  ->set(array('active'=>'0'))
+                  ->where('id','=',$id)
+                  ->execute();
     }
 
     // Cleanse the input before we save it
     public function cleanse($inputArray)
     {
+        // Default to an empty array
         $output = array();
 
         // Check that we have an input to work with
@@ -132,6 +165,7 @@ class Model_comment extends Model {
             // Cleanse the details somewhat
             foreach ($inputArray as $index => $array)
             {
+                // Do some cleansing for XSS prevention
                 $output[$index] = strip_tags($array);
                 $output[$index] = preg_replace('/^\p{Z}+|\p{Z}+$/u', '', $output[$index]);
                 $output[$index] = htmlspecialchars($output[$index]);
@@ -158,10 +192,14 @@ class Model_comment extends Model {
                 {
                     $inputArray[$index]['comment'] = nl2br(html_entity_decode($array['comment'], ENT_QUOTES));
                 }
+
+                // No break to be added
                 else
                 {
                     $inputArray[$index]['comment'] = html_entity_decode($array['comment'], ENT_QUOTES);
                 }
+
+                // We also need to decode entities and set some extra keys from the data we have in the DB
                 $inputArray[$index]['first_name'] = html_entity_decode($array['first_name'], ENT_QUOTES);
                 $inputArray[$index]['age'] = $this->time2str($array['timestamp']);
                 $inputArray[$index]['date'] = date('d F Y, H:i', $array['timestamp']);

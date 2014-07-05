@@ -36,6 +36,7 @@ class Controller_Ajax extends Controller {
         // Valid response
         if (!empty($getData))
         {
+            // Set the data and return success response
             $json->data($getData);
             $json->success('Changes provided');
         }
@@ -44,10 +45,12 @@ class Controller_Ajax extends Controller {
     // We also need to be able to add more comments
     public function action_add()
     {
-        # Select all the
+        // Select all the
         $comment = Model::factory("comment");
         $json = Model::factory("json");
-        $clean = $comments->cleanse($_POST);
+
+        // Clean POST values. Strip out tags and white spaces primarily
+        $clean = $comment->cleanse($_POST);
 
         // Start the validation engine up
         $object = Validation::factory($clean);

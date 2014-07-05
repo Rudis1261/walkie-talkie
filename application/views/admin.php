@@ -44,7 +44,6 @@
         display: block;
       }
 
-
       .shadow {
         -webkit-box-shadow: 8px 8px 8px -5px rgba(0,0,0,0.15);
            -moz-box-shadow: 8px 8px 8px -5px rgba(0,0,0,0.15);
@@ -61,16 +60,6 @@
         text-decoration: uppercase;
         color: #333;
         font-weight: bold;
-      }
-
-      .child {
-        margin-left: 30px;
-        border-left: 1px dotted #CCC;
-      }
-
-      .wrapper {
-        padding: 5px 10px;
-        margin-bottom: 10px;
       }
 
       .small {
@@ -120,7 +109,7 @@
       <a href="/" class="no-line">
         <h1>
           <span class="glyphicon glyphicon-<?php echo $icon; ?>"></span>
-          <?php echo $title; ?>
+          <span class="hidden-xs"><?php echo $title; ?></span>
         </h1>
       </a>
     </div>
@@ -129,26 +118,34 @@
   <!-- Main content container -->
   <div class="container shadow rounded" id="main">
     <?php
+
       // Show messages should there be any
       if (!empty($messages))
       {
+        // Loop through the messages
         foreach($messages as $type => $message)
         {
+          // Default to the type provided
           $class = $type;
+
+          // Errors don't quite match bootstrap's style, lets translate it
           if ($type == "error")
-          {
             $class = "danger";
-          }
-            echo '<div class="alert alert-' . $class . '">
-                    <div><b>' . strtoupper($type) . '</b></div>
-                    <div>' . implode("</div>\n<div>", $message) . '</div>
-                  </div>';
+
+          // Print out the errors and implode the list, should there be
+          echo '<div class="alert alert-' . $class . '">
+                  <div><b>' . strtoupper($type) . '</b></div>
+                  <div>' . implode("</div>\n<div>", $message) . '</div>
+                </div>';
         }
       }
 
-      // Show the comments
+      // Add additional content. ie the forms
       echo $content;
-      echo $comments; ?>
+
+      // Add the table of comments
+      echo $comments;
+    ?>
   </div>
 
   <!-- JS, at the bottom -->
